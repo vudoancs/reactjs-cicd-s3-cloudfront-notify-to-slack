@@ -6,9 +6,20 @@ jobs:
   deploy-dev:
     runs-on: ubuntu-latest
     steps:
+      - name: Notify slack starting
+        if: success()
+        id: slack # IMPORTANT: reference this step ID value in future Slack steps
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        uses: Discontract/github-action-slack-notify-deployment@v1
+        with:
+          channel: {slack_channel_name}    # Slack channel name
+          status: STARTED
+          color: warning
+
       - uses: actions/checkout@v3
 
-       - name: Configure AWS Credentials
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}     #AWS Secret Key ID
@@ -33,3 +44,24 @@ jobs:
           AWS_REGION: 'ap-southeast-2'
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+       - name: Notify slack success
+        if: success()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        uses: Discontract/github-action-slack-notify-deployment@v1
+        with:
+          channel: {slack_channel_name}    # Slack channel name
+          status: SUCCESS
+          color: good
+
+      - name: Notify slack fail
+        if: failure()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        uses: Discontract/github-action-slack-notify-deployment@v1
+        with:
+          channel: {slack_channel_name}    # Slack channel name
+          status: FAILED
+          color: danger
+     
